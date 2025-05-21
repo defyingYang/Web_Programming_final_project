@@ -11,14 +11,36 @@ function CategoryPage() {
   const [expandedCategory, setExpandedCategory] = useState(null);
 
 useEffect(() => {
-  fetch("http://localhost:8000/notes/")
-    .then((res) => res.json())
+  const token = localStorage.getItem("auth_token");
+
+  if (!token) {
+    console.warn("找不到 token，導向登入頁");
+    
+    return;
+  }
+
+  fetch("http://localhost:8000/notes/", {
+    headers: {
+      Authorization: `Token ${token}`,
+    },
+  })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`伺服器回應錯誤: ${res.status}`);
+      }
+      return res.json();
+    })
     .then((data) => {
       console.log("抓到的資料", data);
       setNotes(data);
     })
-    .catch((err) => console.error("API 錯誤", err));
+    .catch((err) => {
+      console.error("API 錯誤", err);
+      alert("取得筆記失敗，請重新登入");
+      navigate("/login");
+    });
 }, []);
+
 
 
   const handleAddNote = () => {
@@ -74,7 +96,7 @@ useEffect(() => {
   };
 
   const handleLogout = () => {
-    navigate("/login");
+    navigate("/");
   };
 
   return (

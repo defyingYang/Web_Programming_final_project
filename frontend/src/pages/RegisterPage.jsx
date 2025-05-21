@@ -2,49 +2,76 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RegisterPage.css';
 
-function LoginPage() {
+function RegisterPage() {
   const navigate = useNavigate();
-  const [account, setAccount] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] =useState('');
+  
+  const handleRegister = async (e) => {
+  e.preventDefault();
 
-  const handleLogin = () => {
-    if (account.trim() === '' || password.trim() === '') {
-      alert('請輸入帳號和密碼');
-      return;
+  if (!email || !password || !username) {
+    alert('請輸入信箱、使用者名稱、密碼');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:8000/auth/users/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        username: username,
+        password: password,
+      }),
+    });
+
+    if (response.ok) {
+      alert('註冊成功，請登入');
+      navigate('/'); // 或 navigate('/login');
+    } else {
+      const data = await response.json();
+      const errorText = Object.entries(data)
+        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+        .join('\n');
+      alert(`註冊失敗：\n${errorText}`);
     }
-    navigate('/category');
-  };
+  } catch (error) {
+    console.error('錯誤:', error);
+    alert('註冊過程出現錯誤，請檢查伺服器是否啟動');
+  }
+};
+
 
   return (
     <div className="Register-container">
       <div>
-          <h1>NoteGenius</h1>
+        <h1>NoteGenius</h1>
         <div className="Register-form-box" id="register-form">
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleRegister}>
             <h2>Register</h2>
             <input
               type="text"
-              name="account"
-              placeholder="account"
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
-            />
-            <input
-              type="text"
-              name="username"
               placeholder="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
             <input
+              type="text"
+              placeholder="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
               type="password"
-              name="password"
               placeholder="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button type="submit" name="register" id='register-button'>Register</button>
+            <button type="submit" id="register-button">Register</button>
             <p>
               Already have an account?{' '}
               <a onClick={(e) => { e.preventDefault(); navigate('/'); }}>
@@ -54,9 +81,8 @@ function LoginPage() {
           </form>
         </div>
       </div>
-      
     </div>
   );
 }
 
-export default LoginPage;
+export default RegisterPage;
